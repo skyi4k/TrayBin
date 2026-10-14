@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller & build outputs
+build/
+*.spec
+*.manifest
+
+# Distribution / packaging (keep dist/TrayBin.exe if desired, or ignore. Usually git ignores dist/, but let's check or keep releases)
+dist/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+Desktop.ini
