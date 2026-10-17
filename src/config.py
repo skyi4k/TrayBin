@@ -6,6 +6,8 @@ REGISTRY_KEY = r"Software\TrayBin"
 LEGACY_REGISTRY_KEY = r"Software\MiniBinKT"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 APP_RUN_NAME = "TrayBin"
+APP_VERSION = "1.0.0"
+GITHUB_REPO = "skyi4k/TrayBin"
 
 def resource_path(relative_path):
     """Возвращает корректный абсолютный путь для dev-режима и PyInstaller."""
@@ -125,6 +127,7 @@ class AppConfig:
         self.show_confirmation = load_setting("show_confirmation", False)
         self.play_sound = load_setting("play_sound", True)
         self.autostart = is_autostart_enabled()
+        self.check_updates = load_setting("check_updates", True)
 
         self.single_click_action = load_string_setting("single_click_action", "empty_bin")
         self.double_click_action = load_string_setting("double_click_action", "open_settings")
@@ -139,6 +142,7 @@ class AppConfig:
         save_setting("show_notification", self.show_notification)
         save_setting("show_confirmation", self.show_confirmation)
         save_setting("play_sound", self.play_sound)
+        save_setting("check_updates", self.check_updates)
         set_autostart(self.autostart)
 
         save_string_setting("single_click_action", self.single_click_action)

@@ -27,6 +27,7 @@ class TrayBinApp:
 
         self.config = AppConfig()
         self.settings_window = None
+        self.pending_update = None
 
         # State tracking
         self.last_item_count = -1
@@ -37,6 +38,7 @@ class TrayBinApp:
         self.init_tray_menu()
         self.init_click_handler()
 
+        self.tray_icon.messageClicked.connect(self.on_tray_message_clicked)
         self.tray_icon.show()
 
         # Update loop
@@ -47,8 +49,18 @@ class TrayBinApp:
         # Initial check
         self.check_bin_state(force=True)
 
+        # Background auto-update check
+        if self.config.check_updates:
+            QTimer.singleShot(3000, self.auto_check_updates)
+
     def init_tray_menu(self):
         self.tray_menu = QMenu()
+
+        self.act_update = QAction("🚀  Доступно обновление!", triggered=self.action_show_update_dialog)
+        self.act_update.setVisible(False)
+        self.tray_menu.addAction(self.act_update)
+        self.tray_separator = self.tray_menu.addSeparator()
+        self.tray_separator.setVisible(False)
 
         self.act_empty = QAction("🗑️  Очистить корзину", triggered=self.action_empty_bin)
         self.act_open = QAction("📂  Открыть корзину", triggered=self.action_open_bin)
@@ -169,6 +181,36 @@ class TrayBinApp:
                 QSystemTrayIcon.MessageIcon.Warning,
                 4000
             )
+
+    def auto_check_updates(self):
+        from updater import CheckUpdateWorker
+        self.update_checker = CheckUpdateWorker()
+        self.update_checker.update_found.connect(self.on_auto_update_found)
+        self.update_checker.start()
+
+    def on_auto_update_found(self, rel_info):
+        self.pending_update = rel_info
+        tag = rel_info.get("tag", "")
+        self.act_update.setVisible(True)
+        self.tray_separator.setVisible(True)
+        self.act_update.setText(f"🚀  Доступно обновление ({tag})")
+        if self.config.show_notification:
+            self.tray_icon.showMessage(
+                "TrayBin: Доступно обновление",
+                f"Вышла новая версия {tag}! Нажмите сюда, чтобы обновить.",
+                QSystemTrayIcon.MessageIcon.Information,
+                8000
+            )
+
+    def on_tray_message_clicked(self):
+        if self.pending_update:
+            self.action_show_update_dialog()
+
+    def action_show_update_dialog(self):
+        if self.pending_update:
+            from updater import UpdateDialog
+            dlg = UpdateDialog(self.pending_update, self.config)
+            dlg.exec()
 
     def action_open_bin(self):
         bin_manager.open_recycle_bin()

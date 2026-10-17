@@ -8,8 +8,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QPixmap
 
-from config import AppConfig, resource_path
+from config import AppConfig, resource_path, APP_VERSION
 from styles import get_stylesheet
+from updater import CheckUpdateWorker, UpdateDialog
 import bin_manager
 
 class SettingsWindow(QDialog):
@@ -89,11 +90,13 @@ class SettingsWindow(QDialog):
         self.cb_confirmation = QCheckBox("Запрашивать подтверждение перед очисткой")
         self.cb_notification = QCheckBox("Всплывающие уведомления при очистке")
         self.cb_sound = QCheckBox("Воспроизводить системный звук корзины")
+        self.cb_check_updates = QCheckBox("Автоматически проверять обновления")
 
         layout.addWidget(self.cb_autostart)
         layout.addWidget(self.cb_confirmation)
         layout.addWidget(self.cb_notification)
         layout.addWidget(self.cb_sound)
+        layout.addWidget(self.cb_check_updates)
 
         # Theme selection
         theme_layout = QHBoxLayout()
@@ -237,7 +240,7 @@ class SettingsWindow(QDialog):
         layout.setContentsMargins(12, 16, 12, 12)
         layout.setSpacing(8)
 
-        title = QLabel("TrayBin v1.0")
+        title = QLabel(f"TrayBin v{APP_VERSION}")
         title.setObjectName("headerLabel")
         layout.addWidget(title)
 
@@ -255,13 +258,16 @@ class SettingsWindow(QDialog):
 
         # Quick actions
         btn_row = QHBoxLayout()
-        btn_empty_now = QPushButton("Очистить корзину сейчас")
+        btn_empty_now = QPushButton("Очистить корзину")
         btn_empty_now.clicked.connect(self.quick_empty)
         btn_refresh = QPushButton("Обновить")
         btn_refresh.clicked.connect(self.update_stats)
+        self.btn_check_update = QPushButton("Проверить обновления...")
+        self.btn_check_update.clicked.connect(self.check_for_updates_manual)
 
         btn_row.addWidget(btn_empty_now)
         btn_row.addWidget(btn_refresh)
+        btn_row.addWidget(self.btn_check_update)
         btn_row.addStretch()
         layout.addLayout(btn_row)
 
@@ -271,11 +277,37 @@ class SettingsWindow(QDialog):
         footer.setObjectName("subHeaderLabel")
         layout.addWidget(footer)
 
+    def check_for_updates_manual(self):
+        self.btn_check_update.setEnabled(False)
+        self.btn_check_update.setText("Проверка...")
+        self.update_worker = CheckUpdateWorker()
+        self.update_worker.update_found.connect(self.on_update_found)
+        self.update_worker.already_latest.connect(self.on_already_latest)
+        self.update_worker.check_failed.connect(self.on_update_check_failed)
+        self.update_worker.start()
+
+    def on_update_found(self, rel_info):
+        self.btn_check_update.setEnabled(True)
+        self.btn_check_update.setText("Проверить обновления...")
+        dlg = UpdateDialog(rel_info, self.config, self)
+        dlg.exec()
+
+    def on_already_latest(self, ver):
+        self.btn_check_update.setEnabled(True)
+        self.btn_check_update.setText("Проверить обновления...")
+        QMessageBox.information(self, "Обновления", f"У вас установлена последняя версия TrayBin (v{ver}).")
+
+    def on_update_check_failed(self, err):
+        self.btn_check_update.setEnabled(True)
+        self.btn_check_update.setText("Проверить обновления...")
+        QMessageBox.warning(self, "Обновления", f"Не удалось проверить обновления:\n{err}")
+
     def load_values(self):
         self.cb_autostart.setChecked(self.config.autostart)
         self.cb_confirmation.setChecked(self.config.show_confirmation)
         self.cb_notification.setChecked(self.config.show_notification)
         self.cb_sound.setChecked(self.config.play_sound)
+        self.cb_check_updates.setChecked(self.config.check_updates)
 
         # Theme
         idx_theme = self.combo_theme.findData(self.config.theme_mode)
@@ -382,6 +414,7 @@ class SettingsWindow(QDialog):
         self.config.show_confirmation = self.cb_confirmation.isChecked()
         self.config.show_notification = self.cb_notification.isChecked()
         self.config.play_sound = self.cb_sound.isChecked()
+        self.config.check_updates = self.cb_check_updates.isChecked()
         self.config.theme_mode = self.combo_theme.currentData()
         self.config.icon_theme = self.combo_icon_preset.currentData()
 

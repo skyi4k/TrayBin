@@ -34,6 +34,7 @@
 * **Звук и уведомления**: Опция включения/выключения системного звука корзины (`SHERB_NOSOUND`) и всплывающие уведомления Windows об освобожденном месте.
 * **Защита от дубликатов**: Использование именованного Windows Mutex (`TrayBin_Application_Mutex`) предотвращает случайный запуск нескольких копий программы.
 * **Современный интерфейс настроек**: Дизайн в стиле Windows 11 Fluent с поддержкой тёмной и светлой темы.
+* **Автообновление через GitHub**: Автоматическая проверка свежих релизов, уведомление при выходе новой версии и бесшовное обновление приложения в один клик.
 * **Автозагрузка**: Удобное включение запуска вместе со стартом Windows через реестр (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`).
 
 ---
@@ -79,6 +80,7 @@ python build.py
 * **Sound & Notifications**: Toggle Windows trash sound and notification toasts.
 * **Single Instance Guard**: Prevents duplicate tray instances via Windows Named Mutex.
 * **Windows 11 Fluent UI**: Clean settings window supporting both dark and light modes.
+* **GitHub Auto-Updates**: Automatic update checks and seamless in-place application updates.
 
 ---
 
