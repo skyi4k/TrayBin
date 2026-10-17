@@ -6,7 +6,7 @@ REGISTRY_KEY = r"Software\TrayBin"
 LEGACY_REGISTRY_KEY = r"Software\MiniBinKT"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 APP_RUN_NAME = "TrayBin"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 GITHUB_REPO = "skyi4k/TrayBin"
 
 def resource_path(relative_path):
